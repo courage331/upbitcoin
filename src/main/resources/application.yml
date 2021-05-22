@@ -1,0 +1,21 @@
+upbit :
+  key :
+    AccessKey : C4Ev6zIuWd35DX1b1Mjx1pvYVr8DAVPigTIVYLmS
+    SecretKey : iP6ovLpHhxASqjv9l1oIdk6TW2tXZ8ITjm1Pzp9R
+  address:
+    market: https://api.upbit.com/v1/market/all?isDetails=false
+    minuteCandle: https://api.upbit.com/v1/candles/minutes
+
+
+spring:
+  datasource:
+      url: jdbc:mysql://localhost:3306/test?autoReconnect=true
+      username: root
+      password: 1234
+      driver-class-name: com.mysql.jdbc.Driver
+
+---
+
+
+
+
