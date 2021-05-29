@@ -5,6 +5,7 @@ upbit :
   address:
     market: https://api.upbit.com/v1/market/all?isDetails=false
     minuteCandle: https://api.upbit.com/v1/candles/minutes
+    orderbook: https://api.upbit.com/v1/orderbook
 
 
 spring:

@@ -12,10 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import upbit.coin.test.upbitcoin.vo.candle.MinuteCandleList;
 import upbit.coin.test.upbitcoin.vo.candle.MinuteCandleVO;
 import upbit.coin.test.upbitcoin.vo.market.MarketCodeVO;
 import upbit.coin.test.upbitcoin.vo.ResponseVO;
+import upbit.coin.test.upbitcoin.vo.orderbook.OrderBookUnits;
+import upbit.coin.test.upbitcoin.vo.orderbook.OrderBookVO;
 
 
 import java.nio.charset.Charset;
@@ -37,6 +38,9 @@ public class UpbitTestService {
 
     @Value("${upbit.address.minuteCandle}")
     String candleurl;
+
+    @Value("${upbit.address.orderbook}")
+    String orderbookurl;
 
     public ResponseVO showMarketList() {
         ResponseVO responseVO = new ResponseVO();
@@ -135,12 +139,67 @@ public class UpbitTestService {
             }
 
             responseVO.setData(minuteCandleList);
-
+            //System.out.println(response.getHeaders());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 
         return responseVO;
+    }
+
+    public ResponseVO showOrderBook(String markets) {
+
+        ResponseVO responseVO = new ResponseVO();
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        try{
+            restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+
+            HttpHeaders headers = new HttpHeaders();
+
+            headers.add("Accept", "application/json");
+
+            final HttpEntity<String> entity = new HttpEntity(headers);
+
+            orderbookurl += "?markets="+markets;
+            //System.out.println(orderbookurl);
+
+            ResponseEntity<String> response = restTemplate.exchange(orderbookurl, HttpMethod.GET, entity, String.class);
+
+           JsonArray jsonObj = gson.fromJson(response.getBody(), JsonArray.class);
+
+           int len =jsonObj.size();
+           List<OrderBookVO> orderBookVOList = new ArrayList<>();
+           for(int i=0; i<len; i++){
+               OrderBookVO orderBookVO = new OrderBookVO();
+               orderBookVO.setMarket(jsonObj.get(i).getAsJsonObject().get("market").getAsString());
+               orderBookVO.setTimestamp(jsonObj.get(i).getAsJsonObject().get("timestamp").getAsString());
+               orderBookVO.setTotal_ask_size(jsonObj.get(i).getAsJsonObject().get("total_ask_size").getAsString());
+               orderBookVO.setTotal_bid_size(jsonObj.get(i).getAsJsonObject().get("total_bid_size").getAsString());
+
+               JsonArray jsonObj2 = gson.fromJson(jsonObj.get(i).getAsJsonObject().get("orderbook_units"),JsonArray.class);
+               List<OrderBookUnits>orderBookUnitsList = new ArrayList<>();
+               for(int j=0; j<jsonObj2.size(); j++){
+                   OrderBookUnits orderBookUnits = new OrderBookUnits();
+                   orderBookUnits.setAsk_price(jsonObj2.get(j).getAsJsonObject().get("ask_price").getAsInt());
+                   orderBookUnits.setBid_price(jsonObj2.get(j).getAsJsonObject().get("bid_price").getAsInt());
+                   orderBookUnits.setAsk_size(jsonObj2.get(j).getAsJsonObject().get("ask_size").getAsString());
+                   orderBookUnits.setBid_size(jsonObj2.get(j).getAsJsonObject().get("bid_size").getAsString());
+
+                   orderBookUnitsList.add(orderBookUnits);
+               }
+               orderBookVO.setOrderbook_units(orderBookUnitsList);
+
+               orderBookVOList.add(orderBookVO);
+           }
+            responseVO.setData(orderBookVOList);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return responseVO;
+
     }
 }

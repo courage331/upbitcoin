@@ -56,4 +56,14 @@ public class UpbitTestController {
         return responseVO;
     }
 
+    @RequestMapping(method = RequestMethod.GET, value="/orderbook")
+    public ResponseVO showOrderBook(
+            @RequestParam("markets") String markets){
+
+
+        ResponseVO responseVO = upbitTestService.showOrderBook(markets);
+
+        return responseVO;
+    }
+
 }
