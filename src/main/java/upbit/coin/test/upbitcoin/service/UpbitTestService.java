@@ -42,11 +42,14 @@ public class UpbitTestService {
     @Value("${upbit.address.orderbook}")
     String orderbookurl;
 
-    @Value("${upbit.accress.accounts")
+    @Value("${upbit.address.accounts}")
     String accountsurl;
 
-    String accessKey = "";
-    String secretKey = "";
+    @Value("${upbit.key.AccessKey}")
+    String accessKey;
+
+    @Value("${upbit.key.SecretKey}")
+    String secretKey;
 
     public ResponseVO showMarketList() {
         ResponseVO responseVO = new ResponseVO();
