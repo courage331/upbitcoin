@@ -16,8 +16,14 @@ public class UpbitTestController {
     @Autowired
     UpbitTestService upbitTestService;
 
+    @RequestMapping(method = RequestMethod.GET, value="/accounts")
+    public ResponseVO showAccount(){
+        ResponseVO responseVO = upbitTestService.showAccounts();
+        return responseVO;
+    }
+
     //시장 조회
-    @RequestMapping(method = RequestMethod.GET, value = "/accounts")
+    @RequestMapping(method = RequestMethod.GET, value = "/markets")
     public ResponseVO showMarket(){
         ResponseVO responseVO  = upbitTestService.showMarketList();
         return responseVO;

@@ -1,5 +1,7 @@
 package upbit.coin.test.upbitcoin.service;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +14,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import upbit.coin.test.upbitcoin.vo.ResponseVO;
+import upbit.coin.test.upbitcoin.vo.accounts.AccountsVO;
 import upbit.coin.test.upbitcoin.vo.candle.MinuteCandleVO;
 import upbit.coin.test.upbitcoin.vo.market.MarketCodeVO;
-import upbit.coin.test.upbitcoin.vo.ResponseVO;
 import upbit.coin.test.upbitcoin.vo.orderbook.OrderBookUnits;
 import upbit.coin.test.upbitcoin.vo.orderbook.OrderBookVO;
 
 
+import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -28,10 +32,6 @@ public class UpbitTestService {
 
     @Autowired
     Gson gson;
-    ResponseVO responseVO = new ResponseVO();
-
-    String AccessKey = "C4Ev6zIuWd35DX1b1Mjx1pvYVr8DAVPigTIVYLmS";
-    String SecretKey = "iP6ovLpHhxASqjv9l1oIdk6TW2tXZ8ITjm1Pzp9R";
 
     @Value("${upbit.address.market}")
     String marketurl;
@@ -41,6 +41,12 @@ public class UpbitTestService {
 
     @Value("${upbit.address.orderbook}")
     String orderbookurl;
+
+    @Value("${upbit.accress.accounts")
+    String accountsurl;
+
+    String accessKey = "";
+    String secretKey = "";
 
     public ResponseVO showMarketList() {
         ResponseVO responseVO = new ResponseVO();
@@ -76,6 +82,8 @@ public class UpbitTestService {
 //
 //            System.out.println(jsonObj.get(1).getAsJsonObject().get("english_name").getAsString());
 //            System.out.println(jsonObj.get(1).getAsJsonObject().get("market").getAsString());
+            responseVO.setResponseCode(200);
+            responseVO.setResponseMessage("Success");
             responseVO.setData(marketCodeVOList);
 
             for (int i = 0; i < marketCodeVOList.size(); i++) {
@@ -137,8 +145,10 @@ public class UpbitTestService {
                 minuteCandleVO.setUnit(jsonObj.get(i).getAsJsonObject().get("unit").getAsString());
                 minuteCandleList.add(minuteCandleVO);
             }
-
+            responseVO.setResponseCode(200);
+            responseVO.setResponseMessage("Success");
             responseVO.setData(minuteCandleList);
+            System.out.println(InetAddress.getLocalHost());
             //System.out.println(response.getHeaders());
         } catch (Exception e) {
             e.printStackTrace();
@@ -154,7 +164,7 @@ public class UpbitTestService {
 
         RestTemplate restTemplate = new RestTemplate();
 
-        try{
+        try {
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
 
             HttpHeaders headers = new HttpHeaders();
@@ -163,43 +173,102 @@ public class UpbitTestService {
 
             final HttpEntity<String> entity = new HttpEntity(headers);
 
-            orderbookurl += "?markets="+markets;
+            orderbookurl += "?markets=" + markets;
             //System.out.println(orderbookurl);
 
             ResponseEntity<String> response = restTemplate.exchange(orderbookurl, HttpMethod.GET, entity, String.class);
 
-           JsonArray jsonObj = gson.fromJson(response.getBody(), JsonArray.class);
+            JsonArray jsonObj = gson.fromJson(response.getBody(), JsonArray.class);
 
-           int len =jsonObj.size();
-           List<OrderBookVO> orderBookVOList = new ArrayList<>();
-           for(int i=0; i<len; i++){
-               OrderBookVO orderBookVO = new OrderBookVO();
-               orderBookVO.setMarket(jsonObj.get(i).getAsJsonObject().get("market").getAsString());
-               orderBookVO.setTimestamp(jsonObj.get(i).getAsJsonObject().get("timestamp").getAsString());
-               orderBookVO.setTotal_ask_size(jsonObj.get(i).getAsJsonObject().get("total_ask_size").getAsString());
-               orderBookVO.setTotal_bid_size(jsonObj.get(i).getAsJsonObject().get("total_bid_size").getAsString());
+            int len = jsonObj.size();
+            List<OrderBookVO> orderBookVOList = new ArrayList<>();
+            for (int i = 0; i < len; i++) {
+                OrderBookVO orderBookVO = new OrderBookVO();
+                orderBookVO.setMarket(jsonObj.get(i).getAsJsonObject().get("market").getAsString());
+                orderBookVO.setTimestamp(jsonObj.get(i).getAsJsonObject().get("timestamp").getAsString());
+                orderBookVO.setTotal_ask_size(jsonObj.get(i).getAsJsonObject().get("total_ask_size").getAsString());
+                orderBookVO.setTotal_bid_size(jsonObj.get(i).getAsJsonObject().get("total_bid_size").getAsString());
 
-               JsonArray jsonObj2 = gson.fromJson(jsonObj.get(i).getAsJsonObject().get("orderbook_units"),JsonArray.class);
-               List<OrderBookUnits>orderBookUnitsList = new ArrayList<>();
-               for(int j=0; j<jsonObj2.size(); j++){
-                   OrderBookUnits orderBookUnits = new OrderBookUnits();
-                   orderBookUnits.setAsk_price(jsonObj2.get(j).getAsJsonObject().get("ask_price").getAsInt());
-                   orderBookUnits.setBid_price(jsonObj2.get(j).getAsJsonObject().get("bid_price").getAsInt());
-                   orderBookUnits.setAsk_size(jsonObj2.get(j).getAsJsonObject().get("ask_size").getAsString());
-                   orderBookUnits.setBid_size(jsonObj2.get(j).getAsJsonObject().get("bid_size").getAsString());
+                JsonArray jsonObj2 = gson.fromJson(jsonObj.get(i).getAsJsonObject().get("orderbook_units"), JsonArray.class);
+                List<OrderBookUnits> orderBookUnitsList = new ArrayList<>();
+                for (int j = 0; j < jsonObj2.size(); j++) {
+                    OrderBookUnits orderBookUnits = new OrderBookUnits();
+                    orderBookUnits.setAsk_price(jsonObj2.get(j).getAsJsonObject().get("ask_price").getAsInt());
+                    orderBookUnits.setBid_price(jsonObj2.get(j).getAsJsonObject().get("bid_price").getAsInt());
+                    orderBookUnits.setAsk_size(jsonObj2.get(j).getAsJsonObject().get("ask_size").getAsString());
+                    orderBookUnits.setBid_size(jsonObj2.get(j).getAsJsonObject().get("bid_size").getAsString());
 
-                   orderBookUnitsList.add(orderBookUnits);
-               }
-               orderBookVO.setOrderbook_units(orderBookUnitsList);
+                    orderBookUnitsList.add(orderBookUnits);
+                }
+                orderBookVO.setOrderbook_units(orderBookUnitsList);
 
-               orderBookVOList.add(orderBookVO);
-           }
+                orderBookVOList.add(orderBookVO);
+            }
+            responseVO.setResponseCode(200);
+            responseVO.setResponseMessage("Success");
             responseVO.setData(orderBookVOList);
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return responseVO;
 
+    }
+
+    public ResponseVO showAccounts() {
+
+
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        String jwtToken = JWT.create()
+                .withClaim("access_key", accessKey)
+                .withClaim("nonce", UUID.randomUUID().toString())
+                .sign(algorithm);
+
+        String authenticationToken = "Bearer " + jwtToken;
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseVO responseVO = new ResponseVO();
+
+        try {
+
+
+            restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+
+            HttpHeaders headers = new HttpHeaders();
+
+            headers.add("Accept", "application/json");
+            headers.add("Authorization", authenticationToken);
+            final HttpEntity<String> entity = new HttpEntity(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(accountsurl, HttpMethod.GET, entity, String.class);
+
+            JsonArray jsonArray = gson.fromJson(response.getBody(), JsonArray.class);
+            int len = jsonArray.size();
+            if (len == 0) {
+                responseVO.setResponseCode(200);
+                responseVO.setResponseMessage("No Accounts");
+                responseVO.setData(null);
+            } else {
+                List<AccountsVO> accountsVOList = new ArrayList<>();
+                for (int i = 0; i < len; i++) {
+                    AccountsVO accountsVO = new AccountsVO();
+                    accountsVO.setCurrency(jsonArray.get(i).getAsJsonObject().get("currency").getAsString());
+                    accountsVO.setBalance(jsonArray.get(i).getAsJsonObject().get("balance").getAsString());
+                    accountsVO.setLocked(jsonArray.get(i).getAsJsonObject().get("locked").getAsString());
+                    accountsVO.setAvg_buy_price(jsonArray.get(i).getAsJsonObject().get("avg_buy_price").getAsString());
+                    accountsVO.setAvg_buy_price_modifies(jsonArray.get(i).getAsJsonObject().get("avg_buy_price_modified").getAsString());
+                    accountsVO.setUnit_currency(jsonArray.get(i).getAsJsonObject().get("unit_currency").getAsString());
+                    accountsVOList.add(accountsVO);
+                }
+                responseVO.setResponseCode(200);
+                responseVO.setResponseMessage("Success");
+                responseVO.setData(accountsVOList);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return responseVO;
     }
 }
